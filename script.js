@@ -1,14 +1,15 @@
-document.addEventListener("DOMContentLoaded", () => {
-
-console.log("SCRIPT START");
-
-window.requireAuth = function () {
+function requireAuth() {
     const userId = localStorage.getItem("user_id");
 
     if (!userId) {
         window.location.href = "index.html";
     }
 }
+window.requireAuth = requireAuth;
+
+document.addEventListener("DOMContentLoaded", () => {
+
+console.log("SCRIPT START");
 
 const API_URL = "https://ai-saas-site.onrender.com";
 
