@@ -11,8 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function addMessage(text, type) {
         const div = document.createElement("div");
-        div.className = type === "user" ? "msg user" : "msg ai";
+
+        // ВАЖНО: совпадает с твоим CSS
+        div.className = `message ${type}`;
+
         div.textContent = text;
+
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
     }
