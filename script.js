@@ -77,8 +77,6 @@ if (registerForm) {
 
         console.log("REGISTER CLICKED");
 
-        console.log("SENDING REGISTER REQUEST");
-
         const res = await fetch(`${API_URL}/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -100,15 +98,6 @@ if (registerForm) {
         document.getElementById("verifyBlock").style.display = "block";
     });
 }
-        // сохраняем данные для verify
-        pendingEmail = email;
-        pendingPassword = password;
-
-        registerForm.style.display = "none";
-        document.getElementById("verifyBlock").style.display = "block";
-    });
-}
-
 // ================= VERIFY =================
 const verifyForm = document.getElementById("verifyForm");
 
