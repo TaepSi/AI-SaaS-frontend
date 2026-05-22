@@ -1,3 +1,5 @@
+document.addEventListener("DOMContentLoaded", () => {
+
 const API_URL = "https://ai-saas-site.onrender.com";
 
 // временное хранение регистрации
@@ -85,6 +87,7 @@ if (registerForm) {
             return showError("registerError", data.error || "Ошибка регистрации");
         }
 
+        // сохраняем данные для verify
         pendingEmail = email;
         pendingPassword = password;
 
@@ -104,6 +107,10 @@ if (verifyForm) {
 
         showError("verifyError", "");
 
+        if (!pendingEmail) {
+            return showError("verifyError", "Перезайди и зарегистрируйся заново");
+        }
+
         const res = await fetch(`${API_URL}/verify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -119,7 +126,7 @@ if (verifyForm) {
             return showError("verifyError", data.error || "Ошибка кода");
         }
 
-        // автоматический логин после verify
+        // login после verify
         const loginRes = await fetch(`${API_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -132,7 +139,7 @@ if (verifyForm) {
         const loginData = await loginRes.json();
 
         if (!loginRes.ok) {
-            return showError("verifyError", "Аккаунт создан, но вход не удался");
+            return showError("verifyError", "Ошибка входа после верификации");
         }
 
         saveUser(loginData.user_id, loginData.email);
@@ -159,3 +166,5 @@ if (resend) {
         alert("Код отправлен повторно");
     });
 }
+
+});
