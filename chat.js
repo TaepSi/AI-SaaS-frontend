@@ -5,26 +5,50 @@ const API_URL = "https://ai-saas-site.onrender.com";
 document.addEventListener("DOMContentLoaded", () => {
     console.log("CHAT READY");
 
-    const form = document.getElementById("chatForm");
+    const input = document.getElementById("messageInput");
+    const button = document.getElementById("sendBtn");
+    const messages = document.getElementById("messages");
 
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    function addMessage(text, type) {
+        const div = document.createElement("div");
+        div.className = type === "user" ? "msg user" : "msg ai";
+        div.textContent = text;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+    }
 
-        const input = document.getElementById("message").value;
+    button.addEventListener("click", async () => {
+        const text = input.value.trim();
 
-        console.log("SENDING:", input);
+        if (!text) return;
 
-        const res = await fetch(`${API_URL}/chat`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                user_id: localStorage.getItem("user_id"),
-                message: input
-            })
-        });
+        addMessage(text, "user");
+        input.value = "";
 
-        const data = await res.json();
+        try {
+            const res = await fetch(`${API_URL}/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    user_id: localStorage.getItem("user_id"),
+                    message: text
+                })
+            });
 
-        console.log("RESPONSE:", data);
+            const data = await res.json();
+
+            if (data.error) {
+                addMessage("Ошибка: " + data.error, "ai");
+                return;
+            }
+
+            addMessage(data.reply, "ai");
+
+        } catch (err) {
+            console.error(err);
+            addMessage("Сервер недоступен", "ai");
+        }
     });
 });
