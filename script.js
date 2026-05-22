@@ -85,6 +85,8 @@ if (registerForm) {
 
         const data = await res.json();
 
+        console.log(data);
+
         if (!res.ok) {
             return showError("registerError", data.error || "Ошибка регистрации");
         }
