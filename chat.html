@@ -1,54 +1,63 @@
-console.log("CHAT JS LOADED");
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-const API_URL = "https://ai-saas-site.onrender.com";
+    <title>AI Chat — Чат</title>
 
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("CHAT READY");
+    <link rel="stylesheet" href="style.css" />
 
-    const input = document.getElementById("messageInput");
-    const button = document.getElementById("sendBtn");
-    const messages = document.getElementById("messages");
+    <link rel="icon"
+        href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🤖</text></svg>'>
+</head>
 
-    function addMessage(text, type) {
-        const div = document.createElement("div");
-        div.className = type === "user" ? "msg user" : "msg ai";
-        div.textContent = text;
-        messages.appendChild(div);
-        messages.scrollTop = messages.scrollHeight;
-    }
+<body class="chat-body">
 
-    button.addEventListener("click", async () => {
-        const text = input.value.trim();
+    <div class="bg-blur bg-1"></div>
+    <div class="bg-blur bg-2"></div>
 
-        if (!text) return;
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo neon-text">AI Chat</div>
 
-        addMessage(text, "user");
-        input.value = "";
+        <button class="burger" id="burgerBtn">☰</button>
 
-        try {
-            const res = await fetch(`${API_URL}/chat`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    user_id: localStorage.getItem("user_id"),
-                    message: text
-                })
-            });
+        <nav class="nav" id="navMenu">
+            <a href="chat.html" class="active">Чат</a>
+            <a href="dashboard.html">Личный кабинет</a>
 
-            const data = await res.json();
+            <button class="logout-btn" onclick="logout()">
+                Выйти
+            </button>
+        </nav>
+    </header>
 
-            if (data.error) {
-                addMessage("Ошибка: " + data.error, "ai");
-                return;
-            }
+    <!-- MAIN CHAT -->
+    <main class="chat-container fade-in">
 
-            addMessage(data.reply, "ai");
+        <!-- сообщения -->
+        <div id="messages" class="messages"></div>
 
-        } catch (err) {
-            console.error(err);
-            addMessage("Сервер недоступен", "ai");
-        }
-    });
-});
+        <!-- ввод -->
+        <div class="chat-input-area">
+
+            <textarea
+                id="messageInput"
+                placeholder="Напишите сообщение..."
+            ></textarea>
+
+            <button id="sendBtn" class="btn-primary">
+                Отправить
+            </button>
+
+        </div>
+
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="script.js"></script>
+    <script src="chat.js"></script>
+
+</body>
+</html>
