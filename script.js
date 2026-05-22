@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 console.log("SCRIPT START");
 
-function requireAuth() {
+window.requireAuth = function () {
     const userId = localStorage.getItem("user_id");
 
     if (!userId) {
