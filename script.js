@@ -1,19 +1,33 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+console.log("SCRIPT START");
+
+function requireAuth() {
+    const userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+        window.location.href = "index.html";
+    }
+}
+
 const API_URL = "https://ai-saas-site.onrender.com";
 
 // временное хранение регистрации
 let pendingEmail = "";
 let pendingPassword = "";
 
-// utils
+// ================= UTILS =================
+
 function isValidEmail(email) {
     return email.includes("@") && email.includes(".");
 }
 
 function showError(id, text) {
     const el = document.getElementById(id);
-    if (el) el.textContent = text;
+
+    if (el) {
+        el.textContent = text;
+    }
 }
 
 function saveUser(userId, email) {
@@ -21,7 +35,13 @@ function saveUser(userId, email) {
     localStorage.setItem("email", email);
 }
 
+function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+}
+
 // ================= LOGIN =================
+
 const loginForm = document.getElementById("loginForm");
 
 if (loginForm) {
@@ -33,10 +53,19 @@ if (loginForm) {
 
         showError("loginError", "");
 
+        if (!email || !password) {
+            return showError("loginError", "Заполни все поля");
+        }
+
         const res = await fetch(`${API_URL}/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email,
+                password
+            })
         });
 
         const data = await res.json();
@@ -46,11 +75,13 @@ if (loginForm) {
         }
 
         saveUser(data.user_id, data.email);
+
         window.location.href = "chat.html";
     });
 }
 
 // ================= REGISTER =================
+
 const registerForm = document.getElementById("registerForm");
 
 if (registerForm) {
@@ -71,6 +102,10 @@ if (registerForm) {
             return showError("registerError", "Неверный email");
         }
 
+        if (password.length < 3) {
+            return showError("registerError", "Пароль слишком короткий");
+        }
+
         if (password !== password2) {
             return showError("registerError", "Пароли не совпадают");
         }
@@ -79,8 +114,13 @@ if (registerForm) {
 
         const res = await fetch(`${API_URL}/register`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email,
+                password
+            })
         });
 
         const data = await res.json();
@@ -91,16 +131,23 @@ if (registerForm) {
             return showError("registerError", data.error || "Ошибка регистрации");
         }
 
-        console.log("REGISTER SUCCESS", data);
+        console.log("REGISTER SUCCESS");
 
         pendingEmail = email;
         pendingPassword = password;
 
         registerForm.style.display = "none";
-        document.getElementById("verifyBlock").style.display = "block";
+
+        const verifyBlock = document.getElementById("verifyBlock");
+
+        if (verifyBlock) {
+            verifyBlock.style.display = "block";
+        }
     });
 }
+
 // ================= VERIFY =================
+
 const verifyForm = document.getElementById("verifyForm");
 
 if (verifyForm) {
@@ -111,13 +158,19 @@ if (verifyForm) {
 
         showError("verifyError", "");
 
+        if (!code) {
+            return showError("verifyError", "Введите код");
+        }
+
         if (!pendingEmail) {
-            return showError("verifyError", "Перезайди и зарегистрируйся заново");
+            return showError("verifyError", "Сначала зарегистрируйся");
         }
 
         const res = await fetch(`${API_URL}/verify`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 email: pendingEmail,
                 code
@@ -127,13 +180,15 @@ if (verifyForm) {
         const data = await res.json();
 
         if (!res.ok) {
-            return showError("verifyError", data.error || "Ошибка кода");
+            return showError("verifyError", data.error || "Неверный код");
         }
 
-        // login после verify
+        // автоматический вход
         const loginRes = await fetch(`${API_URL}/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 email: pendingEmail,
                 password: pendingPassword
@@ -143,24 +198,32 @@ if (verifyForm) {
         const loginData = await loginRes.json();
 
         if (!loginRes.ok) {
-            return showError("verifyError", "Ошибка входа после верификации");
+            return showError("verifyError", "Ошибка входа");
         }
 
         saveUser(loginData.user_id, loginData.email);
+
         window.location.href = "chat.html";
     });
 }
 
-// ================= RESEND =================
+// ================= RESEND CODE =================
+
 const resend = document.getElementById("resendCode");
 
 if (resend) {
     resend.addEventListener("click", async (e) => {
         e.preventDefault();
 
+        if (!pendingEmail) {
+            return;
+        }
+
         await fetch(`${API_URL}/register`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 email: pendingEmail,
                 password: pendingPassword
@@ -170,5 +233,40 @@ if (resend) {
         alert("Код отправлен повторно");
     });
 }
+
+// ================= DASHBOARD =================
+
+if (window.location.pathname.includes("dashboard.html")) {
+
+    requireAuth();
+
+    const email = localStorage.getItem("email");
+    const userId = localStorage.getItem("user_id");
+
+    const welcomeText = document.getElementById("welcomeText");
+
+    if (welcomeText) {
+        welcomeText.textContent = `Добро пожаловать, ${email}!`;
+    }
+
+    fetch(`${API_URL}/stats?user_id=${userId}`)
+        .then(r => r.json())
+        .then(data => {
+
+            if (data.error) {
+                return;
+            }
+
+            document.getElementById("statSent").textContent = data.sent;
+            document.getElementById("statReceived").textContent = data.received;
+            document.getElementById("statDays").textContent = data.days;
+            document.getElementById("statTokens").textContent = data.tokens;
+        })
+        .catch(err => {
+            console.error(err);
+        });
+}
+
+console.log("SCRIPT END");
 
 });
