@@ -1,6 +1,6 @@
 console.log("CHAT JS LOADED");
 
-const API_URL = "https://ai-saas-site.onrender.com";
+const API_URL = "https://ai-saas-backend-production-5083.up.railway.app";
 
 document.addEventListener("DOMContentLoaded", () => {
     console.log("CHAT READY");
