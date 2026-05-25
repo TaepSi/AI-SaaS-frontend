@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 console.log("SCRIPT START");
 
-const API_URL = "https://ai-saas-site.onrender.com";
+const API_URL = "https://ai-saas-backend-production-5083.up.railway.app";
 
 // временное хранение регистрации
 let pendingEmail = "";
