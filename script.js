@@ -157,16 +157,6 @@ if (verifyForm) {
 
         const code = document.getElementById("verifyCode").value.trim();
 
-        showError("verifyError", "");
-
-        if (!code) {
-            return showError("verifyError", "Введите код");
-        }
-
-        if (!pendingEmail) {
-            return showError("verifyError", "Сначала зарегистрируйся");
-        }
-
         const res = await fetch(`${API_URL}/verify`, {
             method: "POST",
             headers: {
@@ -181,28 +171,10 @@ if (verifyForm) {
         const data = await res.json();
 
         if (!res.ok) {
-            return showError("verifyError", data.error || "Неверный код");
+            return showError("verifyError", data.error || "wrong code");
         }
 
-        // автоматический вход
-        const loginRes = await fetch(`${API_URL}/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email: pendingEmail,
-                password: pendingPassword
-            })
-        });
-
-        const loginData = await loginRes.json();
-
-        if (!loginRes.ok) {
-            return showError("verifyError", "Ошибка входа");
-        }
-
-        saveUser(loginData.user_id, loginData.email);
+        saveUser(data.user_id, data.email);
 
         window.location.href = "chat.html";
     });
