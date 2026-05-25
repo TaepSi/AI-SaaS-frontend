@@ -1,3 +1,9 @@
+console.log("SCRIPT START");
+
+const API_URL = "https://ai-saas-backend-production-5083.up.railway.app";
+
+// ================= AUTH CHECK =================
+
 function requireAuth() {
     const userId = localStorage.getItem("user_id");
 
@@ -5,30 +11,14 @@ function requireAuth() {
         window.location.href = "index.html";
     }
 }
+
 window.requireAuth = requireAuth;
 
-document.addEventListener("DOMContentLoaded", () => {
-
-console.log("SCRIPT START");
-
-const API_URL = "https://ai-saas-backend-production-5083.up.railway.app";
-
-// временное хранение регистрации
-let pendingEmail = "";
-let pendingPassword = "";
-
-// ================= UTILS =================
-
-function isValidEmail(email) {
-    return email.includes("@") && email.includes(".");
-}
+// ================= HELPERS =================
 
 function showError(id, text) {
     const el = document.getElementById(id);
-
-    if (el) {
-        el.textContent = text;
-    }
+    if (el) el.textContent = text;
 }
 
 function saveUser(userId, email) {
@@ -52,21 +42,10 @@ if (loginForm) {
         const email = document.getElementById("loginEmail").value.trim();
         const password = document.getElementById("loginPassword").value.trim();
 
-        showError("loginError", "");
-
-        if (!email || !password) {
-            return showError("loginError", "Заполни все поля");
-        }
-
         const res = await fetch(`${API_URL}/login`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email,
-                password
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
         });
 
         const data = await res.json();
@@ -76,12 +55,14 @@ if (loginForm) {
         }
 
         saveUser(data.user_id, data.email);
-
         window.location.href = "chat.html";
     });
 }
 
 // ================= REGISTER =================
+
+let pendingEmail = "";
+let pendingPassword = "";
 
 const registerForm = document.getElementById("registerForm");
 
@@ -93,57 +74,31 @@ if (registerForm) {
         const password = document.getElementById("registerPassword").value.trim();
         const password2 = document.getElementById("registerPassword2").value.trim();
 
-        showError("registerError", "");
-
         if (!email || !password || !password2) {
             return showError("registerError", "Заполни все поля");
-        }
-
-        if (!isValidEmail(email)) {
-            return showError("registerError", "Неверный email");
-        }
-
-        if (password.length < 3) {
-            return showError("registerError", "Пароль слишком короткий");
         }
 
         if (password !== password2) {
             return showError("registerError", "Пароли не совпадают");
         }
 
-        console.log("REGISTER CLICKED");
-
         const res = await fetch(`${API_URL}/register`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                email,
-                password
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
         });
 
         const data = await res.json();
-
-        console.log(data);
 
         if (!res.ok) {
             return showError("registerError", data.error || "Ошибка регистрации");
         }
 
-        console.log("REGISTER SUCCESS");
-
         pendingEmail = email;
         pendingPassword = password;
 
         registerForm.style.display = "none";
-
-        const verifyBlock = document.getElementById("verifyBlock");
-
-        if (verifyBlock) {
-            verifyBlock.style.display = "block";
-        }
+        document.getElementById("verifyBlock").style.display = "block";
     });
 }
 
@@ -159,9 +114,7 @@ if (verifyForm) {
 
         const res = await fetch(`${API_URL}/verify`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 email: pendingEmail,
                 code
@@ -171,16 +124,17 @@ if (verifyForm) {
         const data = await res.json();
 
         if (!res.ok) {
-            return showError("verifyError", data.error || "wrong code");
+            return showError("verifyError", data.error || "Неверный код");
         }
 
+        // сохраняем пользователя (ВАЖНО)
         saveUser(data.user_id, data.email);
 
         window.location.href = "chat.html";
     });
 }
 
-// ================= RESEND CODE =================
+// ================= RESEND =================
 
 const resend = document.getElementById("resendCode");
 
@@ -188,15 +142,11 @@ if (resend) {
     resend.addEventListener("click", async (e) => {
         e.preventDefault();
 
-        if (!pendingEmail) {
-            return;
-        }
+        if (!pendingEmail) return;
 
         await fetch(`${API_URL}/register`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 email: pendingEmail,
                 password: pendingPassword
@@ -214,32 +164,12 @@ if (window.location.pathname.includes("dashboard.html")) {
     requireAuth();
 
     const email = localStorage.getItem("email");
-    const userId = localStorage.getItem("user_id");
 
     const welcomeText = document.getElementById("welcomeText");
 
     if (welcomeText) {
         welcomeText.textContent = `Добро пожаловать, ${email}!`;
     }
-
-    fetch(`${API_URL}/stats?user_id=${userId}`)
-        .then(r => r.json())
-        .then(data => {
-
-            if (data.error) {
-                return;
-            }
-
-            document.getElementById("statSent").textContent = data.sent;
-            document.getElementById("statReceived").textContent = data.received;
-            document.getElementById("statDays").textContent = data.days;
-            document.getElementById("statTokens").textContent = data.tokens;
-        })
-        .catch(err => {
-            console.error(err);
-        });
 }
 
 console.log("SCRIPT END");
-
-});
