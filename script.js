@@ -243,4 +243,36 @@ document.addEventListener("DOMContentLoaded", () => {
     loadHistory();
 });
 
+// ================= DASHBOARD =================
+
+if (window.location.pathname.includes("dashboard.html")) {
+
+    requireAuth();
+
+    const email = localStorage.getItem("email");
+    const userId = localStorage.getItem("user_id");
+
+    const welcomeText = document.getElementById("welcomeText");
+
+    if (welcomeText) {
+        welcomeText.textContent = `Добро пожаловать, ${email}!`;
+    }
+
+    fetch(`${API_URL}/stats?user_id=${userId}`)
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.error) return;
+
+            document.getElementById("statSent").textContent = data.sent;
+            document.getElementById("statReceived").textContent = data.received;
+            document.getElementById("statDays").textContent = data.days;
+            document.getElementById("statTokens").textContent = data.tokens;
+
+        })
+        .catch(err => {
+            console.error("stats error:", err);
+        });
+}
+
 console.log("SCRIPT END");
