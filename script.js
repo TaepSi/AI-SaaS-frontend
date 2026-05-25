@@ -127,7 +127,6 @@ if (verifyForm) {
             return showError("verifyError", data.error || "Неверный код");
         }
 
-        // сохраняем пользователя (ВАЖНО)
         saveUser(data.user_id, data.email);
 
         window.location.href = "chat.html";
@@ -157,19 +156,65 @@ if (resend) {
     });
 }
 
-// ================= DASHBOARD =================
+// ================= CHAT =================
 
-if (window.location.pathname.includes("dashboard.html")) {
+document.addEventListener("DOMContentLoaded", () => {
 
-    requireAuth();
+    const input = document.getElementById("messageInput");
+    const button = document.getElementById("sendBtn");
+    const messages = document.getElementById("messages");
 
-    const email = localStorage.getItem("email");
+    if (!input || !button || !messages) return;
 
-    const welcomeText = document.getElementById("welcomeText");
+    function addMessage(text, type) {
+        const div = document.createElement("div");
+        div.className = `message ${type}`;
+        div.textContent = text;
 
-    if (welcomeText) {
-        welcomeText.textContent = `Добро пожаловать, ${email}!`;
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
     }
-}
+
+    async function sendMessage() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        addMessage(text, "user");
+        input.value = "";
+
+        try {
+            const res = await fetch(`${API_URL}/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    user_id: localStorage.getItem("user_id"),
+                    message: text
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                addMessage(data.error || "Ошибка сервера", "ai");
+                return;
+            }
+
+            addMessage(data.reply, "ai");
+
+        } catch (err) {
+            console.error(err);
+            addMessage("Сервер недоступен", "ai");
+        }
+    }
+
+    button.addEventListener("click", sendMessage);
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
+
+});
 
 console.log("SCRIPT END");
