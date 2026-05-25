@@ -166,6 +166,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!input || !button || !messages) return;
 
+    const userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+        window.location.href = "index.html";
+        return;
+    }
+
     function addMessage(text, type) {
         const div = document.createElement("div");
         div.className = `message ${type}`;
@@ -173,6 +180,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
+    }
+
+    // ================= LOAD HISTORY =================
+    async function loadHistory() {
+        try {
+            const res = await fetch(`${API_URL}/history?user_id=${userId}`);
+            const data = await res.json();
+
+            data.forEach(msg => {
+                addMessage(msg.content, msg.role === "user" ? "user" : "ai");
+            });
+
+            messages.scrollTop = messages.scrollHeight;
+
+        } catch (err) {
+            console.error("history error:", err);
+        }
     }
 
     async function sendMessage() {
@@ -189,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    user_id: localStorage.getItem("user_id"),
+                    user_id: userId,
                     message: text
                 })
             });
@@ -215,6 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") sendMessage();
     });
 
+    // 🚀 ВАЖНО: загрузка истории при входе
+    loadHistory();
 });
 
 console.log("SCRIPT END");
