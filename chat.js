@@ -3,18 +3,12 @@ console.log("CHAT JS LOADED");
 const API_URL = "https://ai-saas-backend-production-5083.up.railway.app";
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("CHAT READY");
 
     const input = document.getElementById("messageInput");
     const button = document.getElementById("sendBtn");
     const messages = document.getElementById("messages");
 
-    const userId = localStorage.getItem("user_id");
-
-    if (!userId) {
-        window.location.href = "index.html";
-        return;
-    }
+    if (!input || !button || !messages) return;
 
     function addMessage(text, type) {
         const div = document.createElement("div");
@@ -25,24 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
         messages.scrollTop = messages.scrollHeight;
     }
 
-    // ================= LOAD HISTORY =================
-    async function loadHistory() {
-        try {
-            const res = await fetch(`${API_URL}/history?user_id=${userId}`);
-            const data = await res.json();
-
-            data.forEach(msg => {
-                addMessage(msg.content, msg.role === "user" ? "user" : "ai");
-            });
-
-        } catch (err) {
-            console.error("history error", err);
-        }
-    }
-
-    loadHistory();
-
-    // ================= SEND MESSAGE =================
     async function sendMessage() {
         const text = input.value.trim();
         if (!text) return;
@@ -57,15 +33,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    user_id: userId,
+                    user_id: localStorage.getItem("user_id"),
                     message: text
                 })
             });
 
             const data = await res.json();
 
-            if (data.error) {
-                addMessage("Ошибка: " + data.error, "ai");
+            if (!res.ok) {
+                addMessage(data.error || "Ошибка сервера", "ai");
                 return;
             }
 
@@ -80,6 +56,11 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", sendMessage);
 
     input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") sendMessage();
+        if (e.key === "Enter") {
+            sendMessage();
+        }
     });
+
 });
+
+console.log("CHAT READY");
