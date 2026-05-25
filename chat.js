@@ -9,21 +9,42 @@ document.addEventListener("DOMContentLoaded", () => {
     const button = document.getElementById("sendBtn");
     const messages = document.getElementById("messages");
 
+    const userId = localStorage.getItem("user_id");
+
+    if (!userId) {
+        window.location.href = "index.html";
+        return;
+    }
+
     function addMessage(text, type) {
         const div = document.createElement("div");
-
-        // ВАЖНО: совпадает с твоим CSS
         div.className = `message ${type}`;
-
         div.textContent = text;
 
         messages.appendChild(div);
         messages.scrollTop = messages.scrollHeight;
     }
 
-    button.addEventListener("click", async () => {
-        const text = input.value.trim();
+    // ================= LOAD HISTORY =================
+    async function loadHistory() {
+        try {
+            const res = await fetch(`${API_URL}/history?user_id=${userId}`);
+            const data = await res.json();
 
+            data.forEach(msg => {
+                addMessage(msg.content, msg.role === "user" ? "user" : "ai");
+            });
+
+        } catch (err) {
+            console.error("history error", err);
+        }
+    }
+
+    loadHistory();
+
+    // ================= SEND MESSAGE =================
+    async function sendMessage() {
+        const text = input.value.trim();
         if (!text) return;
 
         addMessage(text, "user");
@@ -36,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    user_id: localStorage.getItem("user_id"),
+                    user_id: userId,
                     message: text
                 })
             });
@@ -54,5 +75,11 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error(err);
             addMessage("Сервер недоступен", "ai");
         }
+    }
+
+    button.addEventListener("click", sendMessage);
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage();
     });
 });
